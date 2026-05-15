@@ -20,19 +20,9 @@
 
 Диаграмма показывает основные **контейнеры** и потоки между ними в целевом состоянии (масштабирование по продуктам, геозонам и объёму событий).
 
-**Файл для Draw.io:** [`diagrams/c4-containers.drawio`](diagrams/c4-containers.drawio)
+**Mermaid:** [`diagrams/c4-containers.mmd`](diagrams/c4-containers.mmd)
 
-**Как открыть:**
-
-1. Онлайн: [diagrams.net](https://app.diagrams.net) → **Open Existing Diagram** → выберите файл `.drawio` из репозитория.
-2. VS Code / Cursor: расширение **Draw.io Integration** — открыть `.drawio` как обычный файл.
-3. Desktop: приложение **diagrams.net** (draw.io).
-
-После открытия при необходимости подвиньте блоки и подписи связей под свой формат презентации.
-
-**Файл Mermaid (для сравнения с Draw.io):** [`diagrams/c4-containers.mmd`](diagrams/c4-containers.mmd)
-
-Как посмотреть: скопируйте содержимое `.mmd` в [Mermaid Live Editor](https://mermaid.live), либо откройте файл в IDE с расширением для Mermaid (например Markdown Preview Mermaid Support).
+Просмотр: вставьте содержимое файла в [Mermaid Live Editor](https://mermaid.live) или откройте в IDE с поддержкой Mermaid.
 
 **Ключевые изменения по сравнению с текущим состоянием:**
 
@@ -49,13 +39,9 @@
 
 Детализация **внутри контейнера «Платформа данных»** — как устроены компоненты, поддерживающие near-real-time и batch.
 
-**Файл для Draw.io:** [`diagrams/c4-components-data-platform.drawio`](diagrams/c4-components-data-platform.drawio)
+**Mermaid:** [`diagrams/c4-components-data-platform.mmd`](diagrams/c4-components-data-platform.mmd)
 
-Открывается так же, как диаграмму контейнеров (см. п. 1.2).
-
-**Файл Mermaid:** [`diagrams/c4-components-data-platform.mmd`](diagrams/c4-components-data-platform.mmd)
-
-Как посмотреть — так же, как для контейнеров (п. 1.2): [Mermaid Live](https://mermaid.live) или расширение Mermaid в IDE.
+Просмотр — как в п. 1.2 ([Mermaid Live](https://mermaid.live) или IDE).
 
 ---
 
@@ -108,10 +94,8 @@
 
 | Файл | Назначение |
 |------|------------|
-| `README.md` | Текст задания: C4 (контейнеры и компоненты), карта рисков, план управления |
-| `diagrams/c4-containers.drawio` | C4 контейнеры (Draw.io / diagrams.net) |
-| `diagrams/c4-containers.mmd` | Та же логика в Mermaid (текстовый исходник) |
-| `diagrams/c4-components-data-platform.drawio` | C4 компоненты платформы данных (Draw.io) |
-| `diagrams/c4-components-data-platform.mmd` | Та же логика в Mermaid |
+| `README.md` | Текст задания: C4 (ссылки на Mermaid), карта рисков, план управления |
+| `diagrams/c4-containers.mmd` | C4 уровень контейнеров (Mermaid) |
+| `diagrams/c4-components-data-platform.mmd` | C4 уровень компонентов платформы данных (Mermaid) |
 
-Файлы `.drawio` редактируются в diagrams.net; `.mmd` — в [Mermaid Live](https://mermaid.live) или в IDE с поддержкой Mermaid.
+Диаграммы задаются только в формате Mermaid (`.mmd`).
