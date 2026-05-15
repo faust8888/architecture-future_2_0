@@ -1,0 +1,58 @@
+%% DDD Context Map — «Будущее 2.0» (целевая декомпозиция)
+%% Легенда связей: OHS — Open Host Service; PL — Published Language; CS — Customer-Supplier;
+%%              CF — Conformist; ACL — Anti-Corruption Layer; PH — Partnership
+
+flowchart TB
+  subgraph Clinical["Домен: клиники и пациентский сервис"]
+    BC_PAT["Patient Identity / Registration"]
+    BC_VISIT["Appointment / Visit Management"]
+    BC_CLIN_DOC["Clinical Documentation (PHI)"]
+  end
+
+  subgraph Fintech["Домен: финтех"]
+    BC_ACCT["Accounts / Ledger"]
+    BC_PAY["Payments / Settlements"]
+    BC_CRED["Lending / Credit Agreement"]
+  end
+
+  subgraph AI["Домен: ИИ"]
+    BC_INF["Diagnostic Assistance / Inference Session"]
+    BC_ML["Model Lifecycle / Governance"]
+  end
+
+  subgraph Data["Домен: данные и аналитика"]
+    BC_CAT["Data Catalog / Lineage"]
+    BC_MART["Analytics Mart / Semantic Layer"]
+    BC_INT["Integration Contracts (schemas, topics)"]
+  end
+
+  subgraph Partners["Домен: партнёры (расширение)"]
+    BC_PHARMA["Pharma Integration"]
+    BC_DEVICE["Medical Device Telemetry"]
+  end
+
+  subgraph Legacy["Переходный контур совместимости"]
+    BC_CAMEL["ESB Routing (Camel)"]
+    BC_DWH["DWH Legacy Bridge"]
+  end
+
+  BC_VISIT -->|"CS / ACL"| BC_ACCT
+  BC_PAY -->|"интеграция счётов"| BC_ACCT
+  BC_CRED -->|"CS"| BC_ACCT
+
+  BC_INF -->|"PH: клинический контур"| BC_CLIN_DOC
+  BC_INF -->|"ACL → разрешённые факты"| BC_INT
+
+  BC_CLIN_DOC -.->|"не PHI в mart"| BC_MART
+
+  BC_INT -->|"OHS / PL"| BC_CAT
+  BC_MART -->|"читает витрины"| BC_CAT
+
+  BC_PHARMA -->|"ACL"| BC_INT
+  BC_DEVICE -->|"ACL"| BC_INT
+
+  BC_CLIN_DOC -.->|"миграция / CDC"| BC_DWH
+  BC_PAY -.->|"batch / CDC"| BC_DWH
+  BC_DWH -.->|"совместимость"| BC_CAMEL
+
+  BC_CAMEL -.->|"вытесняется"| BC_INT

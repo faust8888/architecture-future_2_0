@@ -1,0 +1,71 @@
+%% Упрощённая Event Storming: доменные события (оранжевый слой = facts),
+%% источники слева, подписчики справа. Полная PHI не уходит во внешние топики.
+
+flowchart LR
+  subgraph PubClinical["Источники: клиники"]
+    E_REG(("PatientRegistered"))
+    E_VIS(("VisitCompleted"))
+    E_ORDER(("ClinicalOrderPlaced"))
+  end
+
+  subgraph PubFin["Источники: финтех"]
+    E_ACC(("AccountOpened"))
+    E_PAY(("PaymentCaptured"))
+    E_LOAN(("CreditAgreementCreated"))
+  end
+
+  subgraph PubAI["Источники: ИИ"]
+    E_AIJOB(("AISessionRequested"))
+    E_AIRES(("AIDiagnosticHypothesisRecorded"))
+    E_AIAUD(("AIModelInferenceAudited"))
+  end
+
+  subgraph PubPartner["Источники: партнёры"]
+    E_RX(("PrescriptionFulfillmentSubmitted"))
+    E_DEV(("DeviceObservationReceived"))
+  end
+
+  subgraph Platform["Шина событий / топики"]
+    T_CORE["clinical.* / fintech.* / ai.* / partner.*"]
+  end
+
+  subgraph SubMart["Подписчики: аналитика"]
+    S_METRICS["Mart: операционные метрики"]
+    S_FLOW["Mart: пациентские потоки (обезличенно)"]
+    S_RISK["Mart: кредитный портфель"]
+  end
+
+  subgraph SubOps["Подписчики: операции"]
+    S_BILL["Billing adapter"]
+    S_NOTIF["Уведомления / workflow"]
+    S_FRAUD["Fraud / AML signals"]
+  end
+
+  subgraph SubAI["Подписчики: ИИ"]
+    S_RETRAIN["План переобучения / качество"]
+  end
+
+  E_REG --> T_CORE
+  E_VIS --> T_CORE
+  E_ORDER --> T_CORE
+
+  E_ACC --> T_CORE
+  E_PAY --> T_CORE
+  E_LOAN --> T_CORE
+
+  E_AIJOB --> T_CORE
+  E_AIRES --> T_CORE
+  E_AIAUD --> T_CORE
+
+  E_RX --> T_CORE
+  E_DEV --> T_CORE
+
+  T_CORE --> S_METRICS
+  T_CORE --> S_FLOW
+  T_CORE --> S_RISK
+
+  T_CORE --> S_BILL
+  T_CORE --> S_NOTIF
+  T_CORE --> S_FRAUD
+
+  T_CORE --> S_RETRAIN
