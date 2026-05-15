@@ -1,0 +1,201 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.2.9 Chrome/140.0.7339.249 Electron/38.7.2 Safari/537.36" version="29.2.9">
+  <diagram name="C4-Containers" id="c4-containers">
+    <mxGraphModel dx="1644" dy="1280" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1300" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=16;fontStyle=1" value="C4 — Уровень контейнеров | «Будущее 2.0» (целевое, ~3 года)" vertex="1">
+          <mxGeometry height="30" width="900" x="40" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="zone-platform" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" value="Платформа данных и интеграции" vertex="1">
+          <mxGeometry height="394" width="1120" x="160" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="eb" parent="zone-platform" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="Шина событий&#xa;(Kafka / аналог)" vertex="1">
+          <mxGeometry height="56" width="1120" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="sr" parent="zone-platform" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="Реестр схем /&#xa;каталог событий" vertex="1">
+          <mxGeometry height="56" width="1120" y="82" as="geometry" />
+        </mxCell>
+        <mxCell id="dp" parent="zone-platform" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="Оркестрация потоков&#xa;(batch + streaming)" vertex="1">
+          <mxGeometry height="56" width="1120" y="138" as="geometry" />
+        </mxCell>
+        <mxCell id="lake" parent="zone-platform" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Lakehouse /&#xa;объектное хранилище" vertex="1">
+          <mxGeometry height="56" width="1120" y="194" as="geometry" />
+        </mxCell>
+        <mxCell id="mart" parent="zone-platform" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Витрины + семантический слой&#xa;(без PHI / исследований)" vertex="1">
+          <mxGeometry height="56" width="1120" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="cat" parent="zone-platform" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" value="Каталог данных, lineage" vertex="1">
+          <mxGeometry height="44" width="1120" y="306" as="geometry" />
+        </mxCell>
+        <mxCell id="portal" parent="zone-platform" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1" value="Портал самообслуживания BI" vertex="1">
+          <mxGeometry height="44" width="1120" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="zone-clinical" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Домен: клиники" vertex="1">
+          <mxGeometry height="160" width="300" x="40" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="cis" parent="zone-clinical" style="rounded=1;whiteSpace=wrap;html=1;" value="Клинические сервисы, EHR-интеграция" vertex="1">
+          <mxGeometry height="44" width="220" x="40" y="46" as="geometry" />
+        </mxCell>
+        <mxCell id="phi" parent="zone-clinical" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" value="Хранилище ПДн/медданных&#xa;(не для витрины)" vertex="1">
+          <mxGeometry height="44" width="220" x="40" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="cis_phi" edge="1" parent="zone-clinical" source="cis" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;" target="phi">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="zone-fintech" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#d5e8d4;strokeColor=#82b366;" value="Домен: финтех" vertex="1">
+          <mxGeometry height="160" width="260" x="370" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="pay" parent="zone-fintech" style="rounded=1;whiteSpace=wrap;html=1;" value="Платежи, счета" vertex="1">
+          <mxGeometry height="32" width="180" x="40" y="46" as="geometry" />
+        </mxCell>
+        <mxCell id="cr" parent="zone-fintech" style="rounded=1;whiteSpace=wrap;html=1;" value="Кредитные продукты" vertex="1">
+          <mxGeometry height="32" width="180" x="40" y="86" as="geometry" />
+        </mxCell>
+        <mxCell id="ledger" parent="zone-fintech" style="rounded=1;whiteSpace=wrap;html=1;" value="Учёт, комплаенс" vertex="1">
+          <mxGeometry height="32" width="180" x="40" y="126" as="geometry" />
+        </mxCell>
+        <mxCell id="zone-ai" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#ffe6cc;strokeColor=#d79b00;" value="Домен: ИИ" vertex="1">
+          <mxGeometry height="160" width="220" x="660" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="aisvc" parent="zone-ai" style="rounded=1;whiteSpace=wrap;html=1;" value="ИИ-сервисы" vertex="1">
+          <mxGeometry height="40" width="140" x="40" y="46" as="geometry" />
+        </mxCell>
+        <mxCell id="aimodel" parent="zone-ai" style="rounded=1;whiteSpace=wrap;html=1;" value="Управление моделями (MLOps)" vertex="1">
+          <mxGeometry height="40" width="140" x="40" y="96" as="geometry" />
+        </mxCell>
+        <mxCell id="ai_chain" edge="1" parent="zone-ai" source="aisvc" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;" target="aimodel">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="zone-new" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#f5f5f5;strokeColor=#666666;" value="Новые направления" vertex="1">
+          <mxGeometry height="160" width="340" x="1110" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="pharma" parent="zone-new" style="rounded=1;whiteSpace=wrap;html=1;" value="Фарма-партнёры" vertex="1">
+          <mxGeometry height="134" width="170" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="device" parent="zone-new" style="rounded=1;whiteSpace=wrap;html=1;" value="Поставщик мед. оборудования" vertex="1">
+          <mxGeometry height="134" width="170" x="170" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="zone-edge" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#ffffff;strokeColor=#000000;" value="Периметр" vertex="1">
+          <mxGeometry height="120" width="360" x="790" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="apim" parent="zone-edge" style="rounded=1;whiteSpace=wrap;html=1;fontStyle=1" value="API Gateway / BFF" vertex="1">
+          <mxGeometry height="94" width="140" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="idp" parent="zone-edge" style="rounded=1;whiteSpace=wrap;html=1;" value="IAM / SSO" vertex="1">
+          <mxGeometry height="94" width="120" x="140" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="zone-users" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#ffffff;strokeColor=#000000;" value="Пользователи" vertex="1">
+          <mxGeometry height="120" width="300" x="40" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="op" parent="zone-users" style="rounded=1;whiteSpace=wrap;html=1;" value="Операторы клиник" vertex="1">
+          <mxGeometry height="44" width="100" x="40" y="46" as="geometry" />
+        </mxCell>
+        <mxCell id="biz" parent="zone-users" style="rounded=1;whiteSpace=wrap;html=1;" value="Бизнес и аналитики" vertex="1">
+          <mxGeometry height="44" width="120" x="150" y="46" as="geometry" />
+        </mxCell>
+        <mxCell id="zone-legacy" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;" value="Мосты совместимости (миграция)" vertex="1">
+          <mxGeometry height="120" width="360" x="40" y="980" as="geometry" />
+        </mxCell>
+        <mxCell id="esb" parent="zone-legacy" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;" value="ESB Camel (ограниченно)" vertex="1">
+          <mxGeometry height="94" width="140" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="dwh" parent="zone-legacy" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;" value="Легаси DWH (SQL Server)" vertex="1">
+          <mxGeometry height="94" width="140" x="140" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="zone-obs" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#ffffff;strokeColor=#000000;" value="Наблюдаемость" vertex="1">
+          <mxGeometry height="100" width="320" x="740" y="1010" as="geometry" />
+        </mxCell>
+        <mxCell id="log" parent="zone-obs" style="rounded=1;whiteSpace=wrap;html=1;" value="Логи, трассы, метрики" vertex="1">
+          <mxGeometry height="74" width="240" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="dev" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Команды доменов (разработка)" vertex="1">
+          <mxGeometry height="44" width="200" x="1310" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="op" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;" target="apim">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="apim" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;" target="cis">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="biz" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;" target="apim">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="apim" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;" target="portal">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="830" y="334" />
+              <mxPoint x="830" y="334" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="dev" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;" target="idp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="apim" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;" target="idp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="cis" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;fontSize=10;" target="eb" value="разрешённые события">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="pay" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;" target="eb">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8a" edge="1" parent="1" source="cr" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;" target="eb">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8b" edge="1" parent="1" source="ledger" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;" target="eb">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8c" edge="1" parent="1" source="device" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;" target="eb">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="aisvc" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;" target="eb">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="1" source="pharma" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;" target="eb">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="1" source="eb" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;" target="dp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" edge="1" parent="1" source="eb" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;" target="sr">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" edge="1" parent="1" source="dp" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;" target="lake">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e14" edge="1" parent="1" source="dp" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;" target="mart">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e15" edge="1" parent="1" source="mart" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;" target="cat">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e16" edge="1" parent="1" source="portal" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;" target="mart">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e16b" edge="1" parent="1" source="portal" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;" target="cat">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e17" edge="1" parent="1" source="cis" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;dashed=1;" target="esb">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e18" edge="1" parent="1" source="pay" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;dashed=1;" target="esb">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e19" edge="1" parent="1" source="esb" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;dashed=1;" target="dwh">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e20" edge="1" parent="1" source="dwh" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;dashed=1;fontSize=10;" target="dp" value="миграция">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e21" edge="1" parent="1" source="zone-clinical" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;dashed=1;opacity=50;" target="log">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e22" edge="1" parent="1" source="zone-platform" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=classic;dashed=1;opacity=50;" target="log">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
