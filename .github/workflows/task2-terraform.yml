@@ -36,6 +36,7 @@ env:
   TF_STATE_BUCKET: budushee-terraform-state
   TF_STATE_ENDPOINT: http://127.0.0.1:9000
   TF_STATE_REGION: us-east-1
+  MINIO_IMAGE: minio/minio:RELEASE.2024-12-18T13-15-44Z
 
 jobs:
   validate:
@@ -76,24 +77,33 @@ jobs:
     env:
       AWS_ACCESS_KEY_ID: minioadmin
       AWS_SECRET_ACCESS_KEY: minioadmin
-    services:
-      minio:
-        image: minio/minio:RELEASE.2024-12-18T13-15-44Z
-        env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin
-        ports:
-          - 9000:9000
-        options: >-
-          --health-cmd "curl -f http://localhost:9000/minio/health/live || exit 1"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
     defaults:
       run:
         working-directory: ${{ env.TF_ROOT }}
     steps:
       - uses: actions/checkout@v4
+
+      # Блок services: для minio/minio не передаёт CMD «server» — контейнер сразу выходит со справкой.
+      - name: Start MinIO (Terraform S3 backend)
+        run: |
+          docker rm -f minio_ci 2>/dev/null || true
+          docker run -d --name minio_ci \
+            -p 9000:9000 \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin \
+            "${MINIO_IMAGE}" \
+            server /data --console-address ":9001"
+          echo "Waiting for MinIO..."
+          for i in $(seq 1 45); do
+            if curl -sf http://127.0.0.1:9000/minio/health/live >/dev/null; then
+              echo "MinIO ready"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::MinIO не поднялся за 45 с"
+          docker logs minio_ci 2>&1 || true
+          exit 1
 
       - uses: hashicorp/setup-terraform@v3
         with:
@@ -136,19 +146,27 @@ jobs:
     env:
       AWS_ACCESS_KEY_ID: minioadmin
       AWS_SECRET_ACCESS_KEY: minioadmin
-    services:
-      minio:
-        image: minio/minio:RELEASE.2024-12-18T13-15-44Z
-        env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin
-        ports:
-          - 9000:9000
     defaults:
       run:
         working-directory: ${{ env.TF_ROOT }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Start MinIO (Terraform S3 backend)
+        run: |
+          docker rm -f minio_ci 2>/dev/null || true
+          docker run -d --name minio_ci \
+            -p 9000:9000 \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin \
+            "${MINIO_IMAGE}" \
+            server /data --console-address ":9001"
+          for i in $(seq 1 45); do
+            curl -sf http://127.0.0.1:9000/minio/health/live >/dev/null && exit 0
+            sleep 1
+          done
+          docker logs minio_ci 2>&1 || true
+          exit 1
 
       - uses: hashicorp/setup-terraform@v3
         with:
