@@ -14,10 +14,8 @@ Task2Advanced/
 ├── config/                     # Примеры backend.hcl
 ├── scripts/                    # Вспомогательные скрипты
 ├── docker-compose.yml          # Локальный MinIO
-├── .gitlab-ci.yml              # Альтернатива GitHub Actions
+├── .gitlab-ci.yml              # Пример CI/CD (GitLab)
 └── README.md
-
-.github/workflows/task2-terraform.yml   # Основной CI/CD (в корне репозитория)
 ```
 
 ## Удалённый backend (S3)
@@ -128,58 +126,48 @@ export AWS_ACCESS_KEY_ID=<access-key>
 export AWS_SECRET_ACCESS_KEY=<secret-key>
 ```
 
-## CI/CD (GitHub Actions)
+## CI/CD (GitLab CI)
 
-Файл: [`.github/workflows/task2-terraform.yml`](../.github/workflows/task2-terraform.yml)
+Пример пайплайна: [`.gitlab-ci.yml`](.gitlab-ci.yml) (при необходимости перенесите в корень монорепозитория и скорректируйте пути).
 
 ### Этапы пайплайна
 
 ```mermaid
 flowchart LR
-  A[validate] --> B[remote-state]
+  A[validate] --> B[remote_state]
   B --> C[plan]
-  D[workflow_dispatch] --> E[apply]
+  C --> D[apply manual]
 ```
 
 | Job | Когда | Действие |
 |-----|-------|----------|
-| **validate** | PR, push | `fmt`, `init -backend=false`, `validate` |
-| **remote-state** | PR, push | MinIO + `init` с S3 backend, проверка отсутствия локального state |
-| **plan** | PR, push | `init` + `plan`, артефакт `tfplan` |
-| **apply** | Только `workflow_dispatch` | `plan` + `apply` после approval |
+| **validate** | pipeline | `fmt`, `init -backend=false`, `validate` по матрице `dev` / `stage` / `prod` |
+| **remote_state** | pipeline | сервис MinIO + `init` с S3 backend, проверка отсутствия локального `terraform.tfstate` |
+| **plan** | MR / default branch | `init` + `plan`, артефакт `tfplan` |
+| **apply** | `when: manual` на default branch | `plan` + `apply` для выбранного окружения (`APPLY_ENV`) |
 
-### Apply по кнопке (с approval)
+### Ручной apply
 
-1. В GitHub: **Actions** → **Task2 — Terraform CI/CD** → **Run workflow**
-2. Выберите окружение: `dev` / `stage` / `prod`
-3. В поле `confirm_apply` введите: `apply`
-4. Для `stage` и `prod` настройте **Environment protection rules** (required reviewers) в Settings → Environments
+В GitLab задайте переменную **`APPLY_ENV`** (`dev`, `stage` или `prod`) при запуске manual job **apply**, либо зафиксируйте окружения отдельными job в `.gitlab-ci.yml`. Для `stage` и `prod` используйте **protected environments** и approvers в настройках проекта.
 
-### Secrets (Settings → Secrets and variables → Actions)
+### Переменные CI/CD (GitLab: Settings → CI/CD → Variables)
 
-| Secret | Назначение |
-|--------|------------|
-| `TF_STATE_ACCESS_KEY` | Ключ S3 / MinIO |
-| `TF_STATE_SECRET_KEY` | Секрет S3 / MinIO |
-| `TF_STATE_ENDPOINT` | Endpoint (prod: `https://storage.yandexcloud.net`) |
-| `TF_STATE_BUCKET` | Имя bucket |
-| `YC_TOKEN` | Токен Yandex Cloud (для plan/apply ВМ) |
-| `YC_FOLDER_ID` | Каталог YC |
-| `YC_SUBNET_ID` | Подсеть |
-| `SSH_PUBLIC_KEY` | SSH-ключ |
+| Переменная | Назначение |
+|------------|------------|
+| `TF_STATE_ACCESS_KEY` / `TF_STATE_SECRET_KEY` | Ключи S3 / MinIO (если не захардкожены в примере) |
+| `TF_STATE_ENDPOINT` | Endpoint (prod: например `https://storage.yandexcloud.net`) |
+| `TF_STATE_BUCKET` | Имя bucket для state |
+| `YC_TOKEN` | Токен Yandex Cloud для реального `terraform plan`/`apply` |
+| `YC_FOLDER_ID`, `YC_SUBNET_ID`, `SSH_PUBLIC_KEY` | Параметры провайдера (через `TF_VAR_*` при необходимости) |
 
-Без `YC_TOKEN` job **plan** завершится с предупреждением (remote state при этом проверяется).
-
-### GitLab CI
-
-Альтернативный пайплайн: [`.gitlab-ci.yml`](.gitlab-ci.yml). Stage **apply** — `when: manual`.
+Файл `.gitlab-ci.yml` задаёт MinIO как сервис для remote state; для продакшен-state замените endpoint и секреты на ваш Object Storage.
 
 ## Безопасность
 
 - Секреты и `backend.hcl` **не коммитятся** (см. `.gitignore`)
 - Отдельный state key на каждое окружение
-- `apply` только вручную через `workflow_dispatch` + подтверждение `apply`
-- GitHub Environments с approval для `stage` и `prod`
+- `apply` только вручную (`when: manual`) и только с защищённых веток / окружений по политике GitLab
+- для `stage` и `prod` — protected environments и обязательные approvers
 - `TF_IN_AUTOMATION=true` в CI
 - Чувствительные переменные (`ssh_public_key`) помечены `sensitive = true`
 

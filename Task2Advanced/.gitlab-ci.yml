@@ -1,5 +1,5 @@
-# Альтернатива GitHub Actions — GitLab CI/CD с тем же пайплайном
-# Скопируйте в корень репозитория или настройте include из Task2Advanced
+# Пример CI/CD для Task2Advanced (Terraform + remote S3 state)
+# При необходимости скопируйте в корень репозитория или подключите через include
 
 stages:
   - validate
