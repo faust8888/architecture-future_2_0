@@ -1,0 +1,271 @@
+# CI/CD для Task2Advanced: удалённый state (S3/MinIO) + plan/apply с approval
+name: Task2 — Terraform CI/CD
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "Task2Advanced/**"
+      - ".github/workflows/task2-terraform.yml"
+  pull_request:
+    paths:
+      - "Task2Advanced/**"
+      - ".github/workflows/task2-terraform.yml"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Окружение для apply"
+        required: true
+        type: choice
+        options:
+          - dev
+          - stage
+          - prod
+      confirm_apply:
+        description: 'Введите "apply" для подтверждения'
+        required: true
+        type: string
+
+concurrency:
+  group: terraform-task2-${{ github.event.inputs.environment || 'ci' }}
+  cancel-in-progress: false
+
+env:
+  TF_IN_AUTOMATION: true
+  TF_ROOT: Task2Advanced
+  TF_STATE_BUCKET: budushee-terraform-state
+  TF_STATE_ENDPOINT: http://127.0.0.1:9000
+  TF_STATE_REGION: us-east-1
+
+jobs:
+  validate:
+    name: Validate (${{ matrix.environment }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: [dev, stage, prod]
+    defaults:
+      run:
+        working-directory: ${{ env.TF_ROOT }}/envs/${{ matrix.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+
+      - name: Terraform Format
+        run: terraform fmt -check -recursive ../..
+        working-directory: ${{ env.TF_ROOT }}
+
+      - name: Terraform Init (без backend)
+        run: terraform init -backend=false -input=false
+
+      - name: Terraform Validate
+        run: terraform validate
+
+  remote-state:
+    name: Remote State (${{ matrix.environment }})
+    runs-on: ubuntu-latest
+    needs: validate
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: [dev, stage, prod]
+    env:
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadmin
+    services:
+      minio:
+        image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+        env:
+          MINIO_ROOT_USER: minioadmin
+          MINIO_ROOT_PASSWORD: minioadmin
+        ports:
+          - 9000:9000
+        options: >-
+          --health-cmd "curl -f http://localhost:9000/minio/health/live || exit 1"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    defaults:
+      run:
+        working-directory: ${{ env.TF_ROOT }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+
+      - name: Create S3 bucket
+        run: |
+          docker run --rm --network host --entrypoint /bin/sh \
+            minio/mc:latest \
+            -ec "
+              mc alias set ci http://127.0.0.1:9000 minioadmin minioadmin
+              mc mb --ignore-existing ci/${TF_STATE_BUCKET}
+            "
+
+      - name: Generate backend config
+        env:
+          TF_STATE_KEY: envs/${{ matrix.environment }}/terraform.tfstate
+        run: ./scripts/generate-backend-config.sh ${{ matrix.environment }} envs/${{ matrix.environment }}/backend.ci.hcl
+
+      - name: Terraform Init (remote backend)
+        working-directory: ${{ env.TF_ROOT }}/envs/${{ matrix.environment }}
+        run: |
+          terraform init -backend-config=backend.ci.hcl -input=false -reconfigure
+          if [[ -f terraform.tfstate ]]; then
+            echo "::error::Обнаружен локальный terraform.tfstate — state должен храниться только в S3"
+            exit 1
+          fi
+          echo "Backend настроен, локальный state отсутствует"
+
+  plan:
+    name: Plan (${{ matrix.environment }})
+    runs-on: ubuntu-latest
+    needs: remote-state
+    if: github.event_name != 'workflow_dispatch'
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: [dev, stage, prod]
+    environment: ${{ matrix.environment }}
+    env:
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadmin
+    services:
+      minio:
+        image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+        env:
+          MINIO_ROOT_USER: minioadmin
+          MINIO_ROOT_PASSWORD: minioadmin
+        ports:
+          - 9000:9000
+    defaults:
+      run:
+        working-directory: ${{ env.TF_ROOT }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+
+      - name: Prepare MinIO + backend
+        env:
+          TF_STATE_KEY: envs/${{ matrix.environment }}/terraform.tfstate
+        run: |
+          docker run --rm --network host --entrypoint /bin/sh minio/mc:latest \
+            -ec "mc alias set ci http://127.0.0.1:9000 minioadmin minioadmin && mc mb --ignore-existing ci/budushee-terraform-state"
+          ./scripts/generate-backend-config.sh ${{ matrix.environment }} envs/${{ matrix.environment }}/backend.ci.hcl
+          cd envs/${{ matrix.environment }}
+          terraform init -backend-config=backend.ci.hcl -input=false -reconfigure
+
+      - name: Terraform Plan
+        working-directory: ${{ env.TF_ROOT }}/envs/${{ matrix.environment }}
+        env:
+          YC_TOKEN: ${{ secrets.YC_TOKEN }}
+          TF_VAR_folder_id: ${{ secrets.YC_FOLDER_ID }}
+          TF_VAR_subnet_id: ${{ secrets.YC_SUBNET_ID }}
+          TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
+        run: |
+          set +e
+          terraform plan -var-file=terraform.tfvars -out=tfplan -no-color 2>&1 | tee plan.log
+          EXIT=$?
+          if [[ ${EXIT} -ne 0 ]]; then
+            if [[ -z "${YC_TOKEN}" ]]; then
+              echo "::warning::Plan пропущен: задайте secrets YC_TOKEN, YC_FOLDER_ID, YC_SUBNET_ID, SSH_PUBLIC_KEY"
+              exit 0
+            fi
+            exit ${EXIT}
+          fi
+
+      - name: Upload plan
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-${{ matrix.environment }}
+          path: ${{ env.TF_ROOT }}/envs/${{ matrix.environment }}/tfplan
+          if-no-files-found: ignore
+          retention-days: 5
+
+  apply:
+    name: Apply (${{ github.event.inputs.environment }})
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.confirm_apply == 'apply'
+    environment: ${{ github.event.inputs.environment }}
+    defaults:
+      run:
+        working-directory: ${{ env.TF_ROOT }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+
+      - name: Configure remote state
+        env:
+          TF_STATE_KEY: envs/${{ github.event.inputs.environment }}/terraform.tfstate
+          TF_STATE_ENDPOINT: ${{ secrets.TF_STATE_ENDPOINT }}
+          TF_STATE_BUCKET: ${{ secrets.TF_STATE_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.TF_STATE_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.TF_STATE_SECRET_KEY }}
+        run: |
+          if [[ -z "${AWS_ACCESS_KEY_ID}" ]]; then
+            echo "Используется MinIO по умолчанию (локальные credentials)"
+            export AWS_ACCESS_KEY_ID=minioadmin
+            export AWS_SECRET_ACCESS_KEY=minioadmin
+            export TF_STATE_ENDPOINT="${TF_STATE_ENDPOINT:-http://127.0.0.1:9000}"
+            export TF_STATE_BUCKET="${TF_STATE_BUCKET:-budushee-terraform-state}"
+            docker compose up -d minio
+            sleep 5
+            docker run --rm --network host --entrypoint /bin/sh minio/mc:latest \
+              -ec "mc alias set ci http://127.0.0.1:9000 minioadmin minioadmin && mc mb --ignore-existing ci/budushee-terraform-state"
+          fi
+          ./scripts/generate-backend-config.sh \
+            "${{ github.event.inputs.environment }}" \
+            "envs/${{ github.event.inputs.environment }}/backend.ci.hcl"
+
+      - name: Terraform Init
+        working-directory: ${{ env.TF_ROOT }}/envs/${{ github.event.inputs.environment }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.TF_STATE_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.TF_STATE_SECRET_KEY }}
+        run: |
+          export AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:-minioadmin}"
+          export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-minioadmin}"
+          terraform init -backend-config=backend.ci.hcl -input=false -reconfigure
+
+      - name: Terraform Plan
+        working-directory: ${{ env.TF_ROOT }}/envs/${{ github.event.inputs.environment }}
+        env:
+          YC_TOKEN: ${{ secrets.YC_TOKEN }}
+          TF_VAR_folder_id: ${{ secrets.YC_FOLDER_ID }}
+          TF_VAR_subnet_id: ${{ secrets.YC_SUBNET_ID }}
+          TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.TF_STATE_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.TF_STATE_SECRET_KEY }}
+        run: |
+          export AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:-minioadmin}"
+          export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-minioadmin}"
+          terraform plan -var-file=terraform.tfvars -out=tfplan
+
+      - name: Terraform Apply
+        working-directory: ${{ env.TF_ROOT }}/envs/${{ github.event.inputs.environment }}
+        env:
+          YC_TOKEN: ${{ secrets.YC_TOKEN }}
+          TF_VAR_folder_id: ${{ secrets.YC_FOLDER_ID }}
+          TF_VAR_subnet_id: ${{ secrets.YC_SUBNET_ID }}
+          TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.TF_STATE_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.TF_STATE_SECRET_KEY }}
+        run: |
+          export AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:-minioadmin}"
+          export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-minioadmin}"
+          terraform apply -auto-approve tfplan

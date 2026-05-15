@@ -1,0 +1,9 @@
+# Пример backend для Yandex Object Storage
+# Документация: https://cloud.yandex.ru/docs/storage/tools/terraform
+
+bucket                      = "budushee-terraform-state"
+key                         = "envs/dev/terraform.tfstate"
+region                      = "ru-central1"
+endpoints                   = { s3 = "https://storage.yandexcloud.net" }
+skip_region_validation      = true
+skip_credentials_validation = false
