@@ -1,0 +1,36 @@
+flowchart LR
+  subgraph Ingest["Приём"]
+    CDC["CDC / коннекторы"]
+    EV["Подписчики на топики"]
+    Batch["Пакетные загрузки"]
+  end
+
+  subgraph Process["Обработка"]
+    DQ["Качество данных"]
+    TF["Трансформации и SCD"]
+    STR["Стриминговые пайплайны"]
+  end
+
+  subgraph Serve["Публикация"]
+    SEM["Семантический слой"]
+    MV["Витрины по доменам"]
+    API["Data API / экспорт для BI"]
+  end
+
+  subgraph Gov["Управление"]
+    CAT["Каталог и lineage"]
+    POL["Политики доступа"]
+    KMS["Шифрование и ключи"]
+  end
+
+  CDC --> DQ
+  EV --> STR
+  Batch --> TF
+  DQ --> TF
+  STR --> MV
+  TF --> MV
+  MV --> SEM
+  SEM --> API
+  CAT -.-> MV
+  POL -.-> API
+  KMS -.-> MV

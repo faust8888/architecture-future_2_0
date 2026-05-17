@@ -1,0 +1,84 @@
+flowchart TB
+  subgraph Users["Пользователи"]
+    Op["Операторы клиник"]
+    Biz["Бизнес и аналитики"]
+    Dev["Команды доменов"]
+  end
+
+  subgraph Edge["Периметр"]
+    APIM["API Gateway / BFF"]
+    IdP["IAM / SSO"]
+  end
+
+  subgraph Clinical["Домен: клиники и ОМС"]
+    CIS["Клинические сервисы и EHR-интеграция"]
+    PHI["Хранилище ПДн/медданных<br/>(не в витрине)"]
+    CIS --> PHI
+  end
+
+  subgraph Fintech["Домен: финтех"]
+    Pay["Платежи и счета"]
+    Cr["Кредитные продукты"]
+    Ledger["Учёт и комплаенс"]
+  end
+
+  subgraph AI["Домен: ИИ"]
+    AISvc["ИИ-сервисы вывод"]
+    AIModel["Управление моделями"]
+    AISvc --> AIModel
+  end
+
+  subgraph NewBiz["Новые направления"]
+    Pharma["Фарма-партнёры"]
+    Device["Поставщик мед. оборудования"]
+  end
+
+  subgraph Platform["Платформа данных и интеграции"]
+    EB["Шина событий<br/>(Kafka / аналог)"]
+    SR["Схемный реестр / каталог событий"]
+    Cat["Каталог данных и lineage"]
+    DP["Оркестрация потоков<br/>(batch + streaming)"]
+    Lake["Lakehouse / объектное хранилище"]
+    Mart["Витрины и семантический слой<br/>(без PHI/исследований)"]
+    Portal["Портал самообслуживания BI"]
+    EB --> SR
+    DP --> Lake
+    DP --> Mart
+    Mart --> Cat
+    Portal --> Mart
+    Portal --> Cat
+  end
+
+  subgraph Legacy["Мосты совместимости (миграция)"]
+    ESB["ESB Camel (ограниченно)"]
+    DWH["Легаси DWH SQL Server"]
+  end
+
+  subgraph Observability["Наблюдаемость"]
+    Log["Логи / трассы / метрики"]
+  end
+
+  Op --> APIM --> CIS
+  Biz --> APIM --> Portal
+  Dev --> IdP
+
+  CIS -->|"события (обезличенные/разрешённые)"| EB
+  Pay --> EB
+  Cr --> EB
+  Ledger --> EB
+  AISvc -->|"события/метрики (без PHI в витрину)"| EB
+  Pharma -->|"события, справочники"| EB
+  Device -->|"события оборудования"| EB
+
+  EB --> DP
+
+  CIS -.->|"регламентированные выгрузки"| ESB
+  Pay -.-> ESB
+  ESB -.-> DWH
+  DWH -.->|"миграция"| DP
+
+  APIM --> IdP
+  Clinical --> Log
+  Fintech --> Log
+  AI --> Log
+  Platform --> Log

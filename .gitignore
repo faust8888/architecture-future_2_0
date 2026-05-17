@@ -1,0 +1,6 @@
+task.md
+
+/resource/**
+
+# Локальные GitHub Actions (не коммитим)
+.github/workflows/

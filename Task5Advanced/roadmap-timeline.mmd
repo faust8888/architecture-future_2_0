@@ -1,0 +1,20 @@
+%% Стратегический роадмап Data Mesh «Будущее 2.0» — откройте в mermaid.live
+%% Упрощённые фазы; календарные даты условные (задайте старт проекта у себя).
+
+gantt
+    title Внедрение Data Mesh и платформы данных
+    dateFormat YYYY-MM-DD
+
+    section Фундамент
+    Каталог PHI политики платформа CI CD     :f0, 2026-01-01, 120d
+
+    section Пилот
+    Data product домен 1                    :f1, after f0, 150d
+    Data product домен 2 Self-service BI    :f1b, after f0, 180d
+
+    section Масштабирование
+    Критичные домены streaming витрины       :f2, after f1b, 270d
+    ACL партнёры мосты Camel DWH            :f2b, after f1, 300d
+
+    section Зрелость
+    Lineage политики как код регионы        :f3, after f2, 365d
