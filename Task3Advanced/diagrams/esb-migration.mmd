@@ -1,0 +1,35 @@
+%% Распределение обязанностей ESB (Camel) после вывода — Kafka не заменяет ESB 1:1
+
+flowchart LR
+  subgraph LegacyIn["Легаси / партнёры"]
+    L1["Старые системы"]
+  end
+
+  subgraph ACL["ACL / адаптеры"]
+    A1["Трансформация + ФЛК на входе"]
+  end
+
+  subgraph Domain["Домены"]
+    D1["Бизнес-логика и агрегаты"]
+    D2["Канонические события"]
+  end
+
+  subgraph Bus["Шина Kafka"]
+    K1["Топики + Schema Registry"]
+  end
+
+  subgraph Consumers["Потребители"]
+    C1["Сервисы / saga"]
+    C2["Платформа DQ + витрины"]
+  end
+
+  subgraph Sync["Синхронно"]
+    GW["API Gateway"]
+  end
+
+  L1 --> A1 --> D1
+  D1 --> D2 --> K1
+  K1 --> C1
+  K1 --> C2
+  L1 -.->|"мост Camel"| GW
+  GW -.-> D1
